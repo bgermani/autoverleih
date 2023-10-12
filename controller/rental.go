@@ -71,15 +71,14 @@ func FindActiveRentalCount(c *gin.Context) {
 // POST /rental
 func CreateRental(c *gin.Context) {
 	var input CreateRentalInput
-
-	const layout = "2006-01-02"
-	start, _ := time.Parse(layout, input.Start)
-	end, _ := time.Parse(layout, input.End)
-
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	const layout = "2006-01-02 15:04:05"
+	start, _ := time.Parse(layout, input.Start)
+	end, _ := time.Parse(layout, input.End)
 
 	// TODO STILL NEED LOGIC TO MAKE SURE CAR ISNT ALREADY RENTED
 
@@ -87,8 +86,9 @@ func CreateRental(c *gin.Context) {
 		AutoId:         input.AutoId,
 		CustomerId:     input.CustomerId,
 		KilometerCount: input.KilometerCount,
-		Start:          datatypes.Date(start),
-		End:            datatypes.Date(end),
+		Start:          start,
+		End:            end,
+		ModifiedAt:     time.Now(),
 	}
 	config.DB.Create(&rental)
 
