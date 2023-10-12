@@ -10,8 +10,6 @@ import (
 	"github.com/bgermani/autoverleih/config"
 
 	"time"
-
-	"gorm.io/datatypes"
 )
 
 type CreateRentalInput struct {
@@ -23,11 +21,11 @@ type CreateRentalInput struct {
 }
 
 type UpdateRentalInput struct {
-	AutoId         int            `json:"auto_id"`
-	CustomerId     int            `json:"customer_id"`
-	KilometerCount int            `json:"kilometer_count"`
-	Start          datatypes.Date `json:"period_start"`
-	End            datatypes.Date `json:"period_end"`
+	AutoId         int    `json:"auto_id"`
+	CustomerId     int    `json:"customer_id"`
+	KilometerCount int    `json:"kilometer_count"`
+	Start          string `json:"period_start"`
+	End            string `json:"period_end"`
 }
 
 // GET /rental
