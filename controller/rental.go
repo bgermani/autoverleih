@@ -54,7 +54,7 @@ func FindRental(c *gin.Context) {
 func FindActiveRentals(c *gin.Context) {
 	var active []model.Rental
 
-	config.DB.Where("period_start <= ? AND period_end >= ?", time.Now(), time.Now()).Find(&active)
+	config.DB.Where("start <= ? AND end >= ?", time.Now(), time.Now()).Find(&active)
 
 	c.JSON(http.StatusOK, gin.H{"data": active})
 }
@@ -63,7 +63,7 @@ func FindActiveRentals(c *gin.Context) {
 func FindActiveRentalCount(c *gin.Context) {
 	var active []model.Rental
 
-	count := config.DB.Where("period_start <= ? AND period_end >= ?", time.Now(), time.Now()).Find(&active)
+	count := config.DB.Where("start <= ? AND end >= ?", time.Now(), time.Now()).Find(&active)
 
 	c.JSON(http.StatusOK, gin.H{"data": count.RowsAffected})
 }
@@ -80,7 +80,24 @@ func CreateRental(c *gin.Context) {
 	start, _ := time.Parse(layout, input.Start)
 	end, _ := time.Parse(layout, input.End)
 
-	// TODO STILL NEED LOGIC TO MAKE SURE CAR ISNT ALREADY RENTED
+	var auto model.Auto
+	if err := config.DB.Where("id = ?", input.AutoId).First(&auto).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Auto not found."})
+		return
+	}
+
+	var customer model.Customer
+	if err := config.DB.Where("id = ?", input.CustomerId).First(&customer).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Customer not found."})
+		return
+	}
+
+	var activeRental model.Rental
+	config.DB.Where("auto_id = ? AND (start BETWEEN ? AND ? OR end BETWEEN ? AND ?)", input.AutoId, start, end, start, end).Limit(1).Find(&activeRental)
+	if activeRental.AutoId == input.AutoId {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Auto already rented during selected period."})
+		return
+	}
 
 	rental := model.Rental{
 		AutoId:         input.AutoId,
@@ -103,7 +120,7 @@ func UpdateRental(c *gin.Context) {
 		return
 	}
 
-	// TODO STILL NEED LOGIC TO MAKE SURE CAR ISNT ALREADY RENTED
+	// UNFINISHED
 
 	var input UpdateRentalInput
 	if err := c.ShouldBindJSON(&input); err != nil {
